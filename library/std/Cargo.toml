@@ -47,6 +47,9 @@ fortanix-sgx-abi = { version = "0.5.0", features = ['rustc-dep-of-std'], public 
 [target.'cfg(target_os = "hermit")'.dependencies]
 hermit-abi = { version = "0.3.0", features = ['rustc-dep-of-std'] }
 
+[target.'cfg(target_os = "arceos")'.dependencies]
+axbase = { path = "../../../crates/axbase", version = "0.1.0", features = ['rustc-dep-of-std'] }
+
 [target.wasm32-wasi.dependencies]
 wasi = { version = "0.11.0", features = ['rustc-dep-of-std'], default-features = false }
 
