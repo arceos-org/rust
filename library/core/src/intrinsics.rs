@@ -1044,6 +1044,11 @@ extern "rust-intrinsic" {
     #[rustc_nounwind]
     pub fn type_name<T: ?Sized>() -> &'static str;
 
+    #[rustc_const_unstable(feature = "const_type_id", issue = "77125")]
+    #[rustc_safe_intrinsic]
+    #[rustc_nounwind]
+    pub fn type_id<T: ?Sized + 'static>() -> u64;
+    /*
     /// Gets an identifier which is globally unique to the specified type. This
     /// function will return the same value for a type regardless of whichever
     /// crate it is invoked in.
@@ -1075,6 +1080,7 @@ extern "rust-intrinsic" {
     #[rustc_nounwind]
     #[cfg(not(bootstrap))]
     pub fn type_id<T: ?Sized + 'static>() -> u128;
+    */
 
     /// A guard for unsafe functions that cannot ever be executed if `T` is uninhabited:
     /// This will statically either panic, or do nothing.
