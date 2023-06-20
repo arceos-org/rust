@@ -28,9 +28,6 @@ macro_rules! abi_ret {
     };
 }
 
-#[path = "../unsupported/once.rs"]
-pub mod once;
-
 pub mod net;
 
 pub mod thread;
