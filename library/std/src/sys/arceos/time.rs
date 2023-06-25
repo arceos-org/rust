@@ -108,7 +108,7 @@ pub struct Instant(Timespec);
 impl Instant {
     pub fn now() -> Instant {
         let mut time: Timespec = Timespec::zero();
-        let _ = unsafe { abi::sys_clock_gettime(CLOCK_MONOTONIC, &mut time.t as *mut timespec) };
+        unsafe { time.t = abi::sys_clock_gettime(CLOCK_MONOTONIC) };
 
         Instant(time)
     }
@@ -207,7 +207,7 @@ impl SystemTime {
     #[stable(feature = "rust1", since = "1.0.0")]
     pub fn now() -> SystemTime {
         let mut time: Timespec = Timespec::zero();
-        let _ = unsafe { abi::sys_clock_gettime(CLOCK_REALTIME, &mut time.t as *mut timespec) };
+        unsafe { time.t = abi::sys_clock_gettime(CLOCK_REALTIME) };
 
         SystemTime(time)
     }

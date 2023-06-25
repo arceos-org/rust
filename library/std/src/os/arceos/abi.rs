@@ -61,10 +61,10 @@ extern "Rust" {
         futex: &AtomicU32, expected: u32,
         timeout: Option<Duration>) -> bool;
     #[stable(feature = "rust1", since = "1.0.0")]
-	pub fn sys_futex_wake(futex: &AtomicU32, count: i32);
+    pub fn sys_futex_wake(futex: &AtomicU32, count: i32);
 
     #[stable(feature = "rust1", since = "1.0.0")]
-	pub fn sys_clock_gettime(_clock_id: u64, tp: *mut timespec) -> i32;
+    pub fn sys_clock_gettime(_clock_id: u64) -> timespec;
 
     //
     // For socket
