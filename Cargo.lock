@@ -3,6 +3,15 @@
 version = 3
 
 [[package]]
+name = "aarch64-cpu"
+version = "9.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "eb711c57d60565ba8f6523eb371e6243639617d817b4df1ae09af250af1af411"
+dependencies = [
+ "tock-registers",
+]
+
+[[package]]
 name = "addr2line"
 version = "0.19.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -63,6 +72,15 @@ dependencies = [
  "core",
  "rand",
  "rand_xorshift",
+]
+
+[[package]]
+name = "allocator"
+version = "0.1.0"
+dependencies = [
+ "bitmap-allocator",
+ "buddy_system_allocator",
+ "slab_allocator",
 ]
 
 [[package]]
@@ -168,6 +186,32 @@ dependencies = [
 ]
 
 [[package]]
+name = "arceos_api"
+version = "0.1.0"
+dependencies = [
+ "axalloc",
+ "axbase",
+ "axhal",
+ "axlog",
+ "axruntime",
+ "libax",
+]
+
+[[package]]
+name = "arm_gic"
+version = "0.1.0"
+dependencies = [
+ "tock-registers",
+]
+
+[[package]]
+name = "arm_pl011"
+version = "0.1.0"
+dependencies = [
+ "tock-registers",
+]
+
+[[package]]
 name = "array_tool"
 version = "1.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -229,6 +273,117 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d468802bab17cbc0cc575e9b053f41e72aa36bfa6b7f55e3529ffa43161b97fa"
 
 [[package]]
+name = "axalloc"
+version = "0.1.0"
+dependencies = [
+ "allocator",
+ "axerrno",
+ "log",
+ "memory_addr",
+ "spinlock",
+]
+
+[[package]]
+name = "axbase"
+version = "0.1.0"
+dependencies = [
+ "compiler_builtins",
+ "rustc-std-workspace-alloc",
+ "rustc-std-workspace-core",
+]
+
+[[package]]
+name = "axconfig"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "toml_edit",
+]
+
+[[package]]
+name = "axerrno"
+version = "0.1.0"
+dependencies = [
+ "axbase",
+ "log",
+]
+
+[[package]]
+name = "axhal"
+version = "0.1.0"
+dependencies = [
+ "aarch64-cpu",
+ "arm_gic",
+ "arm_pl011",
+ "axalloc",
+ "axconfig",
+ "axlog",
+ "bitflags 2.3.3",
+ "cfg-if",
+ "crate_interface",
+ "handler_table",
+ "kernel_guard",
+ "lazy_init",
+ "log",
+ "memory_addr",
+ "page_table",
+ "percpu",
+ "raw-cpuid 11.0.1",
+ "riscv",
+ "sbi-rt",
+ "spinlock",
+ "static_assertions",
+ "tock-registers",
+ "x2apic",
+ "x86",
+ "x86_64",
+]
+
+[[package]]
+name = "axio"
+version = "0.1.0"
+dependencies = [
+ "axerrno",
+]
+
+[[package]]
+name = "axlog"
+version = "0.1.0"
+dependencies = [
+ "cfg-if",
+ "crate_interface",
+ "log",
+ "spinlock",
+]
+
+[[package]]
+name = "axruntime"
+version = "0.1.0"
+dependencies = [
+ "axalloc",
+ "axconfig",
+ "axhal",
+ "axlog",
+ "axtask",
+ "crate_interface",
+ "kernel_guard",
+ "lazy_init",
+ "percpu",
+ "spinlock",
+]
+
+[[package]]
+name = "axtask"
+version = "0.1.0"
+dependencies = [
+ "axhal",
+ "cfg-if",
+ "crate_interface",
+ "kernel_guard",
+ "log",
+]
+
+[[package]]
 name = "backtrace"
 version = "0.3.67"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -262,10 +417,42 @@ dependencies = [
 ]
 
 [[package]]
+name = "bit"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2b645c5c09a7d4035949cfce1a915785aaad6f17800c35fda8a8c311c491f284"
+
+[[package]]
+name = "bit_field"
+version = "0.10.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dc827186963e592360843fb5ba4b973e145841266c1357f7180c43526f2e5b61"
+
+[[package]]
 name = "bitflags"
 version = "1.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bef38d45163c2f1dde094a7dfd33ccf595c92905c8f8f4fdc18d06fb1037718a"
+
+[[package]]
+name = "bitflags"
+version = "2.3.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "630be753d4e58660abd17930c71b647fe46c27ea6b63cc59e1e3851406972e42"
+
+[[package]]
+name = "bitmap-allocator"
+version = "0.1.0"
+source = "git+https://github.com/rcore-os/bitmap-allocator.git?rev=88e871a#88e871a54f28a3d6795478f237466b3332e2fb1d"
+dependencies = [
+ "bit_field",
+]
+
+[[package]]
+name = "bitmaps"
+version = "3.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "703642b98a00b3b90513279a8ede3fcfa479c126c5fb46e78f3051522f021403"
 
 [[package]]
 name = "block-buffer"
@@ -287,6 +474,12 @@ dependencies = [
  "regex-automata 0.1.10",
  "serde",
 ]
+
+[[package]]
+name = "buddy_system_allocator"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "43f9365b6b0c9e1663ca4ca9440c00eda46bc85a3407070be8b5e0d8d1f29629"
 
 [[package]]
 name = "build-manifest"
@@ -457,7 +650,7 @@ version = "0.87.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "43aa55deff4e7fbdb09fa014543372f2c95a06835ac487b9ce57b5099b950838"
 dependencies = [
- "bitflags",
+ "bitflags 1.3.2",
  "chalk-derive",
  "lazy_static",
 ]
@@ -500,7 +693,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "23b71c3ce99b7611011217b366d923f1d0a7e07a92bb2dbf1e84508c673ca3bd"
 dependencies = [
  "atty",
- "bitflags",
+ "bitflags 1.3.2",
  "clap_derive 3.2.18",
  "clap_lex 0.2.2",
  "indexmap",
@@ -529,7 +722,7 @@ checksum = "223163f58c9a40c3b0a43e1c4b50a9ce09f007ea2cb1ec258a687945b4b7929f"
 dependencies = [
  "anstream",
  "anstyle",
- "bitflags",
+ "bitflags 1.3.2",
  "clap_lex 0.4.1",
  "once_cell",
  "strsim",
@@ -816,6 +1009,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "crate_interface"
+version = "0.1.1"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.8",
+]
+
+[[package]]
 name = "crc32fast"
 version = "1.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -823,6 +1025,12 @@ checksum = "b540bd8bc810d3885c6ea91e2018302f68baba2129ab3e88f32389ee9370880d"
 dependencies = [
  "cfg-if",
 ]
+
+[[package]]
+name = "critical-section"
+version = "1.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6548a0ad5d2549e111e1f6a11a6c2e2d00ce6a3dafe22948d67c2b443f775e52"
 
 [[package]]
 name = "crossbeam-channel"
@@ -1078,6 +1286,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "embedded-hal"
+version = "0.2.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "35949884794ad573cf46071e41c9b60efb0cb311e3ca01f7af807af1debc66ff"
+dependencies = [
+ "nb 0.1.3",
+ "void",
+]
+
+[[package]]
 name = "ena"
 version = "0.14.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1233,6 +1451,13 @@ checksum = "a8a2db397cb1c8772f31494cb8917e48cd1e64f0fa7efac59fbd741a0a8ce841"
 dependencies = [
  "crc32fast",
  "miniz_oxide",
+]
+
+[[package]]
+name = "flatten_objects"
+version = "0.1.0"
+dependencies = [
+ "bitmaps",
 ]
 
 [[package]]
@@ -1511,6 +1736,10 @@ dependencies = [
  "serde_json",
  "thiserror",
 ]
+
+[[package]]
+name = "handler_table"
+version = "0.1.0"
 
 [[package]]
 name = "hashbrown"
@@ -1904,6 +2133,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "kernel_guard"
+version = "0.1.0"
+dependencies = [
+ "cfg-if",
+ "crate_interface",
+]
+
+[[package]]
+name = "lazy_init"
+version = "0.1.0"
+
+[[package]]
 name = "lazy_static"
 version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1914,6 +2155,23 @@ name = "lazycell"
 version = "1.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "830d08ce1d1d941e6b30645f1a0eb5643013d835ce3779a5fc208261dbe10f55"
+
+[[package]]
+name = "libax"
+version = "0.1.0"
+dependencies = [
+ "axalloc",
+ "axbase",
+ "axconfig",
+ "axerrno",
+ "axhal",
+ "axio",
+ "axlog",
+ "axruntime",
+ "flatten_objects",
+ "spinlock",
+ "static_assertions",
+]
 
 [[package]]
 name = "libc"
@@ -2170,6 +2428,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "memory_addr"
+version = "0.1.0"
+
+[[package]]
 name = "mime"
 version = "0.3.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2257,6 +2519,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "nb"
+version = "0.1.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "801d31da0513b6ec5214e9bf433a77966320625a37860f910be265be6e18d06f"
+dependencies = [
+ "nb 1.1.0",
+]
+
+[[package]]
+name = "nb"
+version = "1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8d5439c4ad607c3c23abf66de8c8bf57ba8adcd1f129e699851a6e43935d339d"
+
+[[package]]
 name = "new_debug_unreachable"
 version = "1.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2268,7 +2545,7 @@ version = "0.26.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bfdda3d196821d6af13126e40375cdf7da646a96114af134d5f417a9a1dc8e1a"
 dependencies = [
- "bitflags",
+ "bitflags 1.3.2",
  "cfg-if",
  "libc",
  "static_assertions",
@@ -2406,6 +2683,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "page_table"
+version = "0.1.0"
+dependencies = [
+ "log",
+ "memory_addr",
+ "page_table_entry",
+]
+
+[[package]]
+name = "page_table_entry"
+version = "0.1.0"
+dependencies = [
+ "bitflags 2.3.3",
+ "memory_addr",
+ "x86_64",
+]
+
+[[package]]
 name = "panic_abort"
 version = "0.0.0"
 dependencies = [
@@ -2477,6 +2772,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "paste"
+version = "1.0.12"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9f746c4065a8fa3fe23974dd82f15431cc8d40779821001404d10d2e79ca7d79"
+
+[[package]]
 name = "pathdiff"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2487,6 +2788,25 @@ name = "percent-encoding"
 version = "2.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d4fd5641d01c8f18a23da7b6fe29298ff4b55afcccdf78973b24cf3175fee32e"
+
+[[package]]
+name = "percpu"
+version = "0.1.0"
+dependencies = [
+ "cfg-if",
+ "percpu_macros",
+ "spin",
+ "x86",
+]
+
+[[package]]
+name = "percpu_macros"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.8",
+]
 
 [[package]]
 name = "perf-event-open-sys"
@@ -2701,7 +3021,7 @@ version = "0.9.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "77a1a2f1f0a7ecff9c31abbe177637be0e97a0aef46cf8738ece09327985d998"
 dependencies = [
- "bitflags",
+ "bitflags 1.3.2",
  "memchr",
  "unicase",
 ]
@@ -2782,6 +3102,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "raw-cpuid"
+version = "10.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6c297679cb867470fa8c9f67dbba74a78d78e3e98d7cf2b08d6d71540f797332"
+dependencies = [
+ "bitflags 1.3.2",
+]
+
+[[package]]
+name = "raw-cpuid"
+version = "11.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9d86a7c4638d42c44551f4791a20e687dbb4c3de1f33c43dd71e355cd429def1"
+dependencies = [
+ "bitflags 2.3.3",
+]
+
+[[package]]
 name = "rayon"
 version = "1.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2811,7 +3149,7 @@ version = "0.2.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8383f39639269cde97d255a32bdb68c047337295414940c68bdd30c2e13203ff"
 dependencies = [
- "bitflags",
+ "bitflags 1.3.2",
 ]
 
 [[package]]
@@ -2820,7 +3158,7 @@ version = "0.3.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "567664f262709473930a4bf9e51bf2ebf3348f2e748ccc50dea20646858f8f29"
 dependencies = [
- "bitflags",
+ "bitflags 1.3.2",
 ]
 
 [[package]]
@@ -2888,6 +3226,17 @@ version = "0.1.0"
 dependencies = [
  "tidy",
  "walkdir",
+]
+
+[[package]]
+name = "riscv"
+version = "0.10.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "aa3145d2fae3778b1e31ec2e827b228bdc6abd9b74bb5705ba46dcb82069bc4f"
+dependencies = [
+ "bit_field",
+ "critical-section",
+ "embedded-hal",
 ]
 
 [[package]]
@@ -3012,7 +3361,7 @@ checksum = "fc71d2faa173b74b232dedc235e3ee1696581bb132fc116fa3626d6151a1a8fb"
 name = "rustc_abi"
 version = "0.0.0"
 dependencies = [
- "bitflags",
+ "bitflags 1.3.2",
  "rand",
  "rand_xoshiro",
  "rustc_data_structures",
@@ -3026,7 +3375,7 @@ dependencies = [
 name = "rustc_apfloat"
 version = "0.0.0"
 dependencies = [
- "bitflags",
+ "bitflags 1.3.2",
  "smallvec",
 ]
 
@@ -3041,7 +3390,7 @@ dependencies = [
 name = "rustc_ast"
 version = "0.0.0"
 dependencies = [
- "bitflags",
+ "bitflags 1.3.2",
  "memchr",
  "rustc_data_structures",
  "rustc_index",
@@ -3191,7 +3540,7 @@ dependencies = [
 name = "rustc_codegen_llvm"
 version = "0.0.0"
 dependencies = [
- "bitflags",
+ "bitflags 1.3.2",
  "libc",
  "measureme",
  "object 0.31.1",
@@ -3225,7 +3574,7 @@ name = "rustc_codegen_ssa"
 version = "0.0.0"
 dependencies = [
  "ar_archive_writer",
- "bitflags",
+ "bitflags 1.3.2",
  "cc",
  "itertools",
  "jobserver",
@@ -3292,7 +3641,7 @@ name = "rustc_data_structures"
 version = "0.0.0"
 dependencies = [
  "arrayvec",
- "bitflags",
+ "bitflags 1.3.2",
  "cfg-if",
  "elsa",
  "ena",
@@ -3749,7 +4098,7 @@ dependencies = [
 name = "rustc_metadata"
 version = "0.0.0"
 dependencies = [
- "bitflags",
+ "bitflags 1.3.2",
  "libloading",
  "odht",
  "rustc_ast",
@@ -3779,7 +4128,7 @@ dependencies = [
 name = "rustc_middle"
 version = "0.0.0"
 dependencies = [
- "bitflags",
+ "bitflags 1.3.2",
  "chalk-ir",
  "derive_more",
  "either",
@@ -3910,7 +4259,7 @@ dependencies = [
 name = "rustc_parse"
 version = "0.0.0"
 dependencies = [
- "bitflags",
+ "bitflags 1.3.2",
  "rustc_ast",
  "rustc_ast_pretty",
  "rustc_data_structures",
@@ -4045,7 +4394,7 @@ dependencies = [
 name = "rustc_resolve"
 version = "0.0.0"
 dependencies = [
- "bitflags",
+ "bitflags 1.3.2",
  "pulldown-cmark",
  "rustc_arena",
  "rustc_ast",
@@ -4138,7 +4487,7 @@ dependencies = [
 name = "rustc_symbol_mangling"
 version = "0.0.0"
 dependencies = [
- "bitflags",
+ "bitflags 1.3.2",
  "punycode",
  "rustc-demangle",
  "rustc_data_structures",
@@ -4158,7 +4507,7 @@ dependencies = [
 name = "rustc_target"
 version = "0.0.0"
 dependencies = [
- "bitflags",
+ "bitflags 1.3.2",
  "rustc_abi",
  "rustc_data_structures",
  "rustc_feature",
@@ -4259,7 +4608,7 @@ dependencies = [
 name = "rustc_type_ir"
 version = "0.0.0"
 dependencies = [
- "bitflags",
+ "bitflags 1.3.2",
  "rustc_data_structures",
  "rustc_index",
  "rustc_macros",
@@ -4388,7 +4737,7 @@ version = "0.37.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2aae838e49b3d63e9274e1c01833cc8139d3fec468c3b84688c628f44b1ae11d"
 dependencies = [
- "bitflags",
+ "bitflags 1.3.2",
  "errno",
  "io-lifetimes",
  "libc",
@@ -4426,6 +4775,24 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "93fc1dc3aaa9bfed95e02e6eadabb4baf7e3078b0bd1b4d7b6b0b68378900502"
 dependencies = [
  "winapi-util",
+]
+
+[[package]]
+name = "sbi-rt"
+version = "0.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8c113c53291db8ac141e01f43224ed488b8d6001ab66737b82e04695a43a42b7"
+dependencies = [
+ "sbi-spec",
+]
+
+[[package]]
+name = "sbi-spec"
+version = "0.0.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6d4027cf9bb591a9fd0fc0e283be6165c5abe96cb73e9f0e24738c227f425377"
+dependencies = [
+ "static_assertions",
 ]
 
 [[package]]
@@ -4562,6 +4929,13 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c111b5bd5695e56cffe5129854aa230b39c93a305372fdbb2668ca2394eea9f8"
 
 [[package]]
+name = "slab_allocator"
+version = "0.3.1"
+dependencies = [
+ "buddy_system_allocator",
+]
+
+[[package]]
 name = "smallvec"
 version = "1.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4613,6 +4987,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "spin"
+version = "0.9.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6980e8d7511241f8acf4aebddbb1ff938df5eebe98691418c4468d0b72a96a67"
+dependencies = [
+ "lock_api",
+]
+
+[[package]]
+name = "spinlock"
+version = "0.1.0"
+dependencies = [
+ "cfg-if",
+ "kernel_guard",
+]
+
+[[package]]
 name = "stable_deref_trait"
 version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4643,6 +5034,8 @@ version = "0.0.0"
 dependencies = [
  "addr2line",
  "alloc",
+ "arceos_api",
+ "axbase",
  "cfg-if",
  "compiler_builtins",
  "core",
@@ -4650,6 +5043,7 @@ dependencies = [
  "fortanix-sgx-abi",
  "hashbrown 0.14.0",
  "hermit-abi 0.3.0",
+ "libax",
  "libc",
  "miniz_oxide",
  "object 0.30.1",
@@ -4994,6 +5388,12 @@ name = "tinyvec_macros"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cda74da7e1a664f795bb1f8a87ec406fb89a02522cf6e50620d016add6dbbf5c"
+
+[[package]]
+name = "tock-registers"
+version = "0.8.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "696941a0aee7e276a165a978b37918fd5d22c55c3d6bda197813070ca9c0f21c"
 
 [[package]]
 name = "tokio"
@@ -5455,6 +5855,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "49874b5167b65d7193b8aba1567f5c7d93d001cafc34600cee003eda787e483f"
 
 [[package]]
+name = "void"
+version = "1.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6a02e4885ed3bc0f2de90ea6dd45ebcbb66dacffe03547fadbb0eeae2770887d"
+
+[[package]]
+name = "volatile"
+version = "0.4.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "442887c63f2c839b346c192d047a7c87e73d0689c9157b00b53dcc27dd5ea793"
+
+[[package]]
 name = "walkdir"
 version = "2.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5753,6 +6165,42 @@ name = "writeable"
 version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "92d74a687e3b9a7a129db0a8c82b4d464eb9c36f5a66ca68572a7e5f1cfdb5bc"
+
+[[package]]
+name = "x2apic"
+version = "0.4.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "547152b57dd1ae0ce7a4ef1c6470f6039aa7ed22e2179d5bc4f3eda1304e0db3"
+dependencies = [
+ "bit",
+ "bitflags 1.3.2",
+ "paste",
+ "raw-cpuid 10.7.0",
+ "x86_64",
+]
+
+[[package]]
+name = "x86"
+version = "0.52.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2781db97787217ad2a2845c396a5efe286f87467a5810836db6d74926e94a385"
+dependencies = [
+ "bit_field",
+ "bitflags 1.3.2",
+ "raw-cpuid 10.7.0",
+]
+
+[[package]]
+name = "x86_64"
+version = "0.14.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "100555a863c0092238c2e0e814c1096c1e5cf066a309c696a87e907b5f8c5d69"
+dependencies = [
+ "bit_field",
+ "bitflags 1.3.2",
+ "rustversion",
+ "volatile",
+]
 
 [[package]]
 name = "xattr"
