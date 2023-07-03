@@ -10,6 +10,9 @@ pub mod ffi;
 #[stable(feature = "rust1", since = "1.0.0")]
 pub mod fs;
 
+#[stable(feature = "rust1", since = "1.0.0")]
+pub use arceos_api as api;
+
 /// A prelude for conveniently writing platform-specific code.
 ///
 /// Includes all extension traits, and some important type definitions.

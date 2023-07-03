@@ -18,7 +18,7 @@
 extern crate arceos_api;
 
 use crate::os::raw::c_char;
-use axbase::LinuxError;
+use axerrno::LinuxError;
 
 macro_rules! abi_ret {
     ($expr:expr) => {

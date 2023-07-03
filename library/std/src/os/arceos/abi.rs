@@ -6,18 +6,19 @@ use core::sync::atomic::AtomicU32;
 use core::net::SocketAddr;
 use crate::sys::fs::DirEntry;
 use crate::sys::fs::FileAttr;
-use axbase::AxError;
+
+use axerrno::AxError;
 
 #[stable(feature = "rust1", since = "1.0.0")]
-pub use axbase::timespec;
+pub use arceos_api::legacy::timespec;
 #[stable(feature = "rust1", since = "1.0.0")]
-pub use axbase::HandleType;
+pub use arceos_api::legacy::HandleType;
 
 #[stable(feature = "rust1", since = "1.0.0")]
-pub use axbase::{SOCK_STREAM, SOCK_DGRAM};
+pub use arceos_api::legacy::{SOCK_STREAM, SOCK_DGRAM};
 
 #[stable(feature = "rust1", since = "1.0.0")]
-pub use axbase::{CLOCK_MONOTONIC, CLOCK_REALTIME, NSEC_PER_SEC};
+pub use arceos_api::legacy::{CLOCK_MONOTONIC, CLOCK_REALTIME, NSEC_PER_SEC};
 
 extern "Rust" {
     #[stable(feature = "rust1", since = "1.0.0")]

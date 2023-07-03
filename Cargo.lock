@@ -190,11 +190,16 @@ name = "arceos_api"
 version = "0.1.0"
 dependencies = [
  "axalloc",
- "axbase",
+ "axconfig",
+ "axerrno",
+ "axfeat",
+ "axfs",
  "axhal",
+ "axio",
  "axlog",
+ "axnet",
  "axruntime",
- "libax",
+ "axtask",
 ]
 
 [[package]]
@@ -256,6 +261,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "619743e34b5ba4e9703bba34deac3427c72507c7159f5fd030aea8cac0cfe341"
 
 [[package]]
+name = "atomic-polyfill"
+version = "0.1.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e3ff7eb3f316534d83a8a2c3d1674ace8a5a71198eba31e2e2b597833f699b28"
+dependencies = [
+ "critical-section",
+]
+
+[[package]]
 name = "atty"
 version = "0.2.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -284,15 +298,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "axbase"
-version = "0.1.0"
-dependencies = [
- "compiler_builtins",
- "rustc-std-workspace-alloc",
- "rustc-std-workspace-core",
-]
-
-[[package]]
 name = "axconfig"
 version = "0.1.0"
 dependencies = [
@@ -301,10 +306,85 @@ dependencies = [
 ]
 
 [[package]]
+name = "axdriver"
+version = "0.1.0"
+dependencies = [
+ "axalloc",
+ "axconfig",
+ "axhal",
+ "cfg-if",
+ "driver_block",
+ "driver_common",
+ "driver_net",
+ "driver_virtio",
+ "log",
+]
+
+[[package]]
 name = "axerrno"
 version = "0.1.0"
 dependencies = [
- "axbase",
+ "log",
+]
+
+[[package]]
+name = "axfeat"
+version = "0.1.0"
+dependencies = [
+ "axalloc",
+ "axdriver",
+ "axfs",
+ "axhal",
+ "axlog",
+ "axnet",
+ "axruntime",
+ "axsync",
+ "axtask",
+]
+
+[[package]]
+name = "axfs"
+version = "0.1.0"
+dependencies = [
+ "axdriver",
+ "axerrno",
+ "axfs_devfs",
+ "axfs_ramfs",
+ "axfs_vfs",
+ "axio",
+ "axsync",
+ "capability",
+ "cfg-if",
+ "driver_block",
+ "fatfs",
+ "lazy_init",
+ "log",
+]
+
+[[package]]
+name = "axfs_devfs"
+version = "0.1.0"
+dependencies = [
+ "axfs_vfs",
+ "log",
+ "spin",
+]
+
+[[package]]
+name = "axfs_ramfs"
+version = "0.1.0"
+dependencies = [
+ "axfs_vfs",
+ "log",
+ "spin",
+]
+
+[[package]]
+name = "axfs_vfs"
+version = "0.1.0"
+dependencies = [
+ "axerrno",
+ "bitflags 2.3.3",
  "log",
 ]
 
@@ -357,18 +437,45 @@ dependencies = [
 ]
 
 [[package]]
+name = "axnet"
+version = "0.1.0"
+dependencies = [
+ "axdriver",
+ "axerrno",
+ "axhal",
+ "axio",
+ "axsync",
+ "axtask",
+ "cfg-if",
+ "driver_net",
+ "lazy_init",
+ "log",
+ "smoltcp",
+]
+
+[[package]]
 name = "axruntime"
 version = "0.1.0"
 dependencies = [
  "axalloc",
  "axconfig",
+ "axdriver",
+ "axfs",
  "axhal",
  "axlog",
+ "axnet",
  "axtask",
  "crate_interface",
  "kernel_guard",
  "lazy_init",
  "percpu",
+]
+
+[[package]]
+name = "axsync"
+version = "0.1.0"
+dependencies = [
+ "axtask",
  "spinlock",
 ]
 
@@ -376,11 +483,18 @@ dependencies = [
 name = "axtask"
 version = "0.1.0"
 dependencies = [
+ "axconfig",
  "axhal",
  "cfg-if",
  "crate_interface",
  "kernel_guard",
+ "lazy_init",
  "log",
+ "memory_addr",
+ "percpu",
+ "scheduler",
+ "spinlock",
+ "timer_list",
 ]
 
 [[package]]
@@ -447,12 +561,6 @@ source = "git+https://github.com/rcore-os/bitmap-allocator.git?rev=88e871a#88e87
 dependencies = [
  "bit_field",
 ]
-
-[[package]]
-name = "bitmaps"
-version = "3.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "703642b98a00b3b90513279a8ede3fcfa479c126c5fb46e78f3051522f021403"
 
 [[package]]
 name = "block-buffer"
@@ -547,6 +655,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "869119e97797867fd90f5e22af7d0bd274bd4635ebb9eb68c04f3f513ae6c412"
 dependencies = [
  "serde",
+]
+
+[[package]]
+name = "capability"
+version = "0.1.0"
+dependencies = [
+ "axerrno",
+ "bitflags 2.3.3",
 ]
 
 [[package]]
@@ -1141,6 +1257,38 @@ dependencies = [
 ]
 
 [[package]]
+name = "defmt"
+version = "0.3.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a8a2d011b2fee29fb7d659b83c43fce9a2cb4df453e16d441a51448e448f3f98"
+dependencies = [
+ "bitflags 1.3.2",
+ "defmt-macros",
+]
+
+[[package]]
+name = "defmt-macros"
+version = "0.3.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "54f0216f6c5acb5ae1a47050a6645024e6edafc2ee32d421955eccfef12ef92e"
+dependencies = [
+ "defmt-parser",
+ "proc-macro-error",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.8",
+]
+
+[[package]]
+name = "defmt-parser"
+version = "0.3.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "269924c02afd7f94bc4cecbfa5c379f6ffcf9766b3408fe63d22c728654eccd0"
+dependencies = [
+ "thiserror",
+]
+
+[[package]]
 name = "derive-new"
 version = "0.5.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1256,6 +1404,35 @@ dependencies = [
  "compiler_builtins",
  "libc",
  "rustc-std-workspace-core",
+]
+
+[[package]]
+name = "driver_block"
+version = "0.1.0"
+dependencies = [
+ "driver_common",
+]
+
+[[package]]
+name = "driver_common"
+version = "0.1.0"
+
+[[package]]
+name = "driver_net"
+version = "0.1.0"
+dependencies = [
+ "driver_common",
+ "spin",
+]
+
+[[package]]
+name = "driver_virtio"
+version = "0.1.0"
+dependencies = [
+ "driver_block",
+ "driver_common",
+ "driver_net",
+ "virtio-drivers",
 ]
 
 [[package]]
@@ -1416,6 +1593,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "fatfs"
+version = "0.4.0"
+source = "git+https://github.com/rafalh/rust-fatfs?rev=a3a834e#a3a834ef92d94dd227c316c0887654dab00ae085"
+dependencies = [
+ "bitflags 1.3.2",
+ "log",
+]
+
+[[package]]
 name = "field-offset"
 version = "0.3.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1451,13 +1637,6 @@ checksum = "a8a2db397cb1c8772f31494cb8917e48cd1e64f0fa7efac59fbd741a0a8ce841"
 dependencies = [
  "crc32fast",
  "miniz_oxide",
-]
-
-[[package]]
-name = "flatten_objects"
-version = "0.1.0"
-dependencies = [
- "bitmaps",
 ]
 
 [[package]]
@@ -1742,6 +1921,15 @@ name = "handler_table"
 version = "0.1.0"
 
 [[package]]
+name = "hash32"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b0c35f58762feb77d74ebe43bdbc3210f09be9fe6742234d573bacc26ed92b67"
+dependencies = [
+ "byteorder",
+]
+
+[[package]]
 name = "hashbrown"
 version = "0.12.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1769,6 +1957,19 @@ dependencies = [
  "compiler_builtins",
  "rustc-std-workspace-alloc",
  "rustc-std-workspace-core",
+]
+
+[[package]]
+name = "heapless"
+version = "0.7.16"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "db04bc24a18b9ea980628ecf00e6c0264f3c1426dac36c00cb49b6fbad8b0743"
+dependencies = [
+ "atomic-polyfill",
+ "hash32",
+ "rustc_version",
+ "spin",
+ "stable_deref_trait",
 ]
 
 [[package]]
@@ -2157,23 +2358,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "830d08ce1d1d941e6b30645f1a0eb5643013d835ce3779a5fc208261dbe10f55"
 
 [[package]]
-name = "libax"
-version = "0.1.0"
-dependencies = [
- "axalloc",
- "axbase",
- "axconfig",
- "axerrno",
- "axhal",
- "axio",
- "axlog",
- "axruntime",
- "flatten_objects",
- "spinlock",
- "static_assertions",
-]
-
-[[package]]
 name = "libc"
 version = "0.2.146"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2244,6 +2428,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7fb9b38af92608140b86b693604b9ffcc5824240a484d1ecd4795bacb2fe88f3"
 
 [[package]]
+name = "linked_list"
+version = "0.1.0"
+
+[[package]]
 name = "lint-docs"
 version = "0.1.0"
 dependencies = [
@@ -2303,6 +2491,12 @@ name = "mac"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c41e0c4fef86961ac6d6f8a82609f55f31b05e4fce149ac5710e439df7619ba4"
+
+[[package]]
+name = "managed"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0ca88d725a0a943b096803bd34e73a4437208b6077654cc4ecb2947a5f91618d"
 
 [[package]]
 name = "maplit"
@@ -4806,6 +5000,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "scheduler"
+version = "0.1.0"
+dependencies = [
+ "linked_list",
+]
+
+[[package]]
 name = "scoped-tls"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4942,6 +5143,21 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a507befe795404456341dfab10cef66ead4c041f62b8b11bbb92bffe5d0953e0"
 
 [[package]]
+name = "smoltcp"
+version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8d2e3a36ac8fea7b94e666dfa3871063d6e0a5c9d5d4fec9a1a6b7b6760f0229"
+dependencies = [
+ "bitflags 1.3.2",
+ "byteorder",
+ "cfg-if",
+ "defmt",
+ "heapless",
+ "log",
+ "managed",
+]
+
+[[package]]
 name = "snap"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5035,7 +5251,8 @@ dependencies = [
  "addr2line",
  "alloc",
  "arceos_api",
- "axbase",
+ "axerrno",
+ "axfeat",
  "cfg-if",
  "compiler_builtins",
  "core",
@@ -5043,7 +5260,6 @@ dependencies = [
  "fortanix-sgx-abi",
  "hashbrown 0.14.0",
  "hermit-abi 0.3.0",
- "libax",
  "libc",
  "miniz_oxide",
  "object 0.30.1",
@@ -5362,6 +5578,10 @@ dependencies = [
 
 [[package]]
 name = "tier-check"
+version = "0.1.0"
+
+[[package]]
+name = "timer_list"
 version = "0.1.0"
 
 [[package]]
@@ -5855,6 +6075,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "49874b5167b65d7193b8aba1567f5c7d93d001cafc34600cee003eda787e483f"
 
 [[package]]
+name = "virtio-drivers"
+version = "0.4.0"
+source = "git+https://github.com/rcore-os/virtio-drivers.git?rev=409ee72#409ee723c92adf309e825a7b87f53049707ed306"
+dependencies = [
+ "bitflags 1.3.2",
+ "log",
+ "zerocopy",
+]
+
+[[package]]
 name = "void"
 version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6271,6 +6501,27 @@ dependencies = [
  "quote",
  "syn 1.0.102",
  "synstructure 0.12.6",
+]
+
+[[package]]
+name = "zerocopy"
+version = "0.6.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "332f188cc1bcf1fe1064b8c58d150f497e697f49774aa846f2dc949d9a25f236"
+dependencies = [
+ "byteorder",
+ "zerocopy-derive",
+]
+
+[[package]]
+name = "zerocopy-derive"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6505e6815af7de1746a08f69c69606bb45695a17149517680f3b2149713b19a3"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 1.0.102",
 ]
 
 [[package]]

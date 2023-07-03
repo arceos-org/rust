@@ -370,8 +370,20 @@ impl Iterator for LookupHost {
 impl TryFrom<&str> for LookupHost {
     type Error = io::Error;
 
-    fn try_from(_v: &str) -> io::Result<LookupHost> {
-        panic!("todo: TryFrom for LookupHost!");
+    fn try_from(s: &str) -> io::Result<LookupHost> {
+        macro_rules! try_opt {
+            ($e:expr, $msg:expr) => {
+                match $e {
+                    Some(r) => r,
+                    None => return Err(io::const_io_error!(io::ErrorKind::InvalidInput, $msg)),
+                }
+            };
+        }
+
+        // split the string by ':' and convert the second part to u16
+        let (host, port_str) = try_opt!(s.rsplit_once(':'), "invalid socket address");
+        let port: u16 = try_opt!(port_str.parse().ok(), "invalid port value");
+        (host, port).try_into()
     }
 }
 
