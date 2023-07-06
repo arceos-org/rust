@@ -18,15 +18,12 @@
 extern crate arceos_api;
 
 use crate::os::raw::c_char;
-use axerrno::LinuxError;
+
+use arceos_api::{AxError, AxResult};
 
 macro_rules! abi_ret {
     ($expr:expr) => {
-        unsafe {
-            $expr.or_else(|e| {
-                Err(io::Error::new(io::ErrorKind::Other, e.as_str()))
-            })
-        }
+        unsafe { $expr.or_else(|e| Err(io::Error::new(io::ErrorKind::Other, e.as_str()))) }
     };
 }
 
@@ -39,16 +36,16 @@ pub mod thread_parking;
 #[path = "../unix/cmath.rs"]
 pub mod cmath;
 
-pub mod fs;
 pub mod alloc;
 pub mod args;
-pub mod futex;
 #[path = "../unsupported/env.rs"]
 pub mod env;
+pub mod fs;
+pub mod futex;
 #[path = "../unsupported/io.rs"]
 pub mod io;
-pub mod os;
 pub mod memchr;
+pub mod os;
 #[path = "../unix/os_str.rs"]
 pub mod os_str;
 #[path = "../unix/path.rs"]
@@ -88,7 +85,7 @@ pub fn unsupported_err() -> crate::io::Error {
 }
 
 pub fn abort_internal() -> ! {
-    unsafe { abi::sys_terminate(); }
+    unsafe { abi::sys_terminate() }
 }
 
 // This function is needed by the panic runtime. The symbol is named in
@@ -108,7 +105,6 @@ pub fn hashmap_random_keys() -> (u64, u64) {
 // SAFETY: must be called only once during runtime initialization.
 // NOTE: this is not guaranteed to run, for example when Rust code is called externally.
 pub unsafe fn init(argc: isize, argv: *const *const u8, _sigpipe: u8) {
-    let _ = net::init();
     args::init(argc, argv);
 }
 
@@ -136,29 +132,43 @@ pub unsafe extern "C" fn runtime_entry(
     run_dtors();
 }
 
-pub fn decode_error_kind(errno: i32) -> ErrorKind {
-    let err = match errno.try_into() {
-        Ok(e) => e,
-        Err(_) => {
-            return ErrorKind::Uncategorized
+pub fn decode_error_kind(_errno: i32) -> ErrorKind {
+    ErrorKind::Other
+}
+
+fn axerrno_to_error_kind(errno: AxError) -> ErrorKind {
+    use AxError::*;
+    match errno {
+        AddrInUse => ErrorKind::AddrInUse,
+        AlreadyExists => ErrorKind::AlreadyExists,
+        ConnectionRefused => ErrorKind::ConnectionRefused,
+        ConnectionReset => ErrorKind::ConnectionReset,
+        DirectoryNotEmpty => ErrorKind::DirectoryNotEmpty,
+        InvalidInput => ErrorKind::InvalidInput,
+        InvalidData => ErrorKind::InvalidData,
+        IsADirectory => ErrorKind::IsADirectory,
+        NoMemory => ErrorKind::OutOfMemory,
+        NotADirectory => ErrorKind::NotADirectory,
+        NotConnected => ErrorKind::NotConnected,
+        NotFound => ErrorKind::NotFound,
+        PermissionDenied => ErrorKind::PermissionDenied,
+        ResourceBusy => ErrorKind::ResourceBusy,
+        StorageFull => ErrorKind::StorageFull,
+        Unsupported => ErrorKind::Unsupported,
+        UnexpectedEof => ErrorKind::UnexpectedEof,
+        WriteZero => ErrorKind::WriteZero,
+        WouldBlock => ErrorKind::WouldBlock,
+        BadAddress | BadState | Io => ErrorKind::Other,
+        _ => ErrorKind::Other,
+    }
+}
+
+pub fn cvt<T>(t: AxResult<T>) -> crate::io::Result<T> {
+    match t {
+        Ok(t) => Ok(t),
+        Err(e) => {
+            let e = axerrno_to_error_kind(e);
+            Err(crate::io::Error::from(e))
         }
-    };
-    match err {
-        LinuxError::EACCES => ErrorKind::PermissionDenied,
-        LinuxError::EADDRINUSE => ErrorKind::AddrInUse,
-        LinuxError::EADDRNOTAVAIL => ErrorKind::AddrNotAvailable,
-        LinuxError::EAGAIN => ErrorKind::WouldBlock,
-        LinuxError::ECONNABORTED => ErrorKind::ConnectionAborted,
-        LinuxError::ECONNREFUSED => ErrorKind::ConnectionRefused,
-        LinuxError::ECONNRESET => ErrorKind::ConnectionReset,
-        LinuxError::EEXIST => ErrorKind::AlreadyExists,
-        LinuxError::EINTR => ErrorKind::Interrupted,
-        LinuxError::EINVAL => ErrorKind::InvalidInput,
-        LinuxError::ENOENT => ErrorKind::NotFound,
-        LinuxError::ENOTCONN => ErrorKind::NotConnected,
-        LinuxError::EPERM => ErrorKind::PermissionDenied,
-        LinuxError::EPIPE => ErrorKind::BrokenPipe,
-        LinuxError::ETIMEDOUT => ErrorKind::TimedOut,
-        _ => ErrorKind::Uncategorized,
     }
 }

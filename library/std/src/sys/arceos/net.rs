@@ -1,353 +1,354 @@
 use crate::fmt;
 use crate::io::{self, BorrowedCursor, IoSlice, IoSliceMut};
 use crate::net::{Ipv4Addr, Ipv6Addr, Shutdown, SocketAddr};
+use crate::sys::{cvt, unsupported};
 use crate::time::Duration;
-use crate::sys::arceos::abi;
 use alloc::vec::IntoIter;
 
+use arceos_api::net::{self as api, AxTcpSocketHandle};
+
+////////////////////////////////////////////////////////////////////////////////
+// TCP streams
+////////////////////////////////////////////////////////////////////////////////
+
 pub struct TcpStream {
-    inner: Socket,
+    inner: AxTcpSocketHandle,
 }
 
 impl TcpStream {
     pub fn connect(addr: io::Result<&SocketAddr>) -> io::Result<TcpStream> {
         let addr = addr?;
-
-        init();
-
-        let sock = Socket::new(addr, abi::SOCK_STREAM)?;
-
-        unsafe { abi::sys_connect(sock.as_raw(), addr) };
+        let sock = api::ax_tcp_socket();
+        cvt(api::ax_tcp_connect(&sock, *addr))?;
         Ok(TcpStream { inner: sock })
     }
 
     pub fn connect_timeout(_: &SocketAddr, _: Duration) -> io::Result<TcpStream> {
-        panic!("TcpStream::connect_timeout");
+        unsupported()
     }
 
     pub fn set_read_timeout(&self, _: Option<Duration>) -> io::Result<()> {
-        panic!("TcpStream::set_read_timeout");
+        unsupported()
     }
 
     pub fn set_write_timeout(&self, _: Option<Duration>) -> io::Result<()> {
-        panic!("TcpStream::set_write_timeout");
+        unsupported()
     }
 
     pub fn read_timeout(&self) -> io::Result<Option<Duration>> {
-        panic!("TcpStream::read_timeout");
+        unsupported()
     }
 
     pub fn write_timeout(&self) -> io::Result<Option<Duration>> {
-        panic!("TcpStream::write_timeout");
+        unsupported()
     }
 
     pub fn peek(&self, _: &mut [u8]) -> io::Result<usize> {
-        panic!("TcpStream::peek");
+        unsupported()
     }
 
     pub fn read(&self, buf: &mut [u8]) -> io::Result<usize> {
-        self.inner.read(buf)
+        cvt(api::ax_tcp_recv(&self.inner, buf))
     }
 
     pub fn read_buf(&self, _buf: BorrowedCursor<'_>) -> io::Result<()> {
-        panic!("TcpStream::read_buf");
+        unsupported()
     }
 
     pub fn read_vectored(&self, _: &mut [IoSliceMut<'_>]) -> io::Result<usize> {
-        panic!("TcpStream::read_vectored");
+        unsupported()
     }
 
     pub fn is_read_vectored(&self) -> bool {
-        panic!("TcpStream::is_read_vectored");
+        false
     }
 
     pub fn write(&self, buf: &[u8]) -> io::Result<usize> {
-        Ok(unsafe { abi::sys_send(self.inner.as_raw(), buf) })
+        cvt(api::ax_tcp_send(&self.inner, buf))
     }
 
     pub fn write_vectored(&self, _: &[IoSlice<'_>]) -> io::Result<usize> {
-        panic!("TcpStream::write_vectored");
+        unsupported()
     }
 
     pub fn is_write_vectored(&self) -> bool {
-        panic!("TcpStream::is_write_vectored");
+        false
     }
 
     pub fn peer_addr(&self) -> io::Result<SocketAddr> {
-        panic!("TcpStream::peer_addr");
+        cvt(api::ax_tcp_peer_addr(&self.inner))
     }
 
     pub fn socket_addr(&self) -> io::Result<SocketAddr> {
-        panic!("TcpStream::socket_addr");
+        cvt(api::ax_tcp_socket_addr(&self.inner))
     }
 
     pub fn shutdown(&self, _: Shutdown) -> io::Result<()> {
-        panic!("TcpStream::shutdown");
+        cvt(api::ax_tcp_shutdown(&self.inner))
     }
 
     pub fn duplicate(&self) -> io::Result<TcpStream> {
-        panic!("TcpStream::duplicate");
+        unsupported()
     }
 
     pub fn set_linger(&self, _: Option<Duration>) -> io::Result<()> {
-        panic!("TcpStream::set_linger");
+        unsupported()
     }
 
     pub fn linger(&self) -> io::Result<Option<Duration>> {
-        panic!("TcpStream::linger");
+        unsupported()
     }
 
     pub fn set_nodelay(&self, _: bool) -> io::Result<()> {
-        panic!("TcpStream::set_nodelay");
+        unsupported()
     }
 
     pub fn nodelay(&self) -> io::Result<bool> {
-        panic!("TcpStream::nodelay");
+        unsupported()
     }
 
     pub fn set_ttl(&self, _: u32) -> io::Result<()> {
-        panic!("TcpStream::set_ttl");
+        unsupported()
     }
 
     pub fn ttl(&self) -> io::Result<u32> {
-        panic!("TcpStream::ttl");
+        unsupported()
     }
 
     pub fn take_error(&self) -> io::Result<Option<io::Error>> {
-        panic!("TcpStream::take_error");
+        unsupported()
     }
 
     pub fn set_nonblocking(&self, _: bool) -> io::Result<()> {
-        panic!("TcpStream::set_nonblocking");
+        unsupported()
     }
 }
 
 impl fmt::Debug for TcpStream {
-    fn fmt(&self, _f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        panic!("TcpStream::fmt");
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut res = f.debug_struct("TcpStream");
+
+        if let Ok(addr) = self.socket_addr() {
+            res.field("addr", &addr);
+        }
+
+        if let Ok(peer) = self.peer_addr() {
+            res.field("peer", &peer);
+        }
+
+        res.finish()
     }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// TCP listeners
+////////////////////////////////////////////////////////////////////////////////
+
 pub struct TcpListener {
-    inner: Socket,
+    inner: AxTcpSocketHandle,
 }
 
 impl TcpListener {
     pub fn bind(addr: io::Result<&SocketAddr>) -> io::Result<TcpListener> {
         let addr = addr?;
-
-        init();
-
-        let sock = Socket::new(addr, abi::SOCK_STREAM)?;
-
-        // Todo: need setsockopt(s, SOL_SOCKET, SO_REUSEADDR) ???
-
-        // Bind our new socket
-        println!("before netc bind... {:?}", addr);
-        unsafe { abi::sys_bind(sock.as_raw(), addr) };
-        println!("after netc bind !");
-
-        // Start listening, backlog is 128.
-        unsafe { abi::sys_listen(sock.as_raw(), 128) };
+        let backlog = 128;
+        let sock = api::ax_tcp_socket();
+        cvt(api::ax_tcp_bind(&sock, *addr))?;
+        cvt(api::ax_tcp_listen(&sock, backlog))?;
         Ok(TcpListener { inner: sock })
     }
 
     pub fn socket_addr(&self) -> io::Result<SocketAddr> {
-        abi_ret!(
-            abi::sys_getsockname(self.inner.as_raw())
-        )
+        cvt(api::ax_tcp_socket_addr(&self.inner))
     }
 
     pub fn accept(&self) -> io::Result<(TcpStream, SocketAddr)> {
-        let (handle, addr) = abi_ret!(
-            abi::sys_accept(self.inner.as_raw())
-        )?;
-        let sock = Socket::new_from_handle(handle);
+        let (sock, addr) = cvt(api::ax_tcp_accept(&self.inner))?;
         Ok((TcpStream { inner: sock }, addr))
     }
 
     pub fn duplicate(&self) -> io::Result<TcpListener> {
-        panic!("sys::arceos::net::duplicate");
+        unsupported()
     }
 
     pub fn set_ttl(&self, _: u32) -> io::Result<()> {
-        panic!("sys::arceos::net::set_ttl");
+        unsupported()
     }
 
     pub fn ttl(&self) -> io::Result<u32> {
-        panic!("sys::arceos::net::ttl");
+        unsupported()
     }
 
     pub fn set_only_v6(&self, _: bool) -> io::Result<()> {
-        panic!("sys::arceos::net::set_only_v6");
+        unsupported()
     }
 
     pub fn only_v6(&self) -> io::Result<bool> {
-        panic!("sys::arceos::net::only_v6");
+        unsupported()
     }
 
     pub fn take_error(&self) -> io::Result<Option<io::Error>> {
-        panic!("sys::arceos::net::take_error");
+        unsupported()
     }
 
     pub fn set_nonblocking(&self, _: bool) -> io::Result<()> {
-        panic!("sys::arceos::net::set_nonblocking");
+        unsupported()
     }
 }
 
 impl fmt::Debug for TcpListener {
-    fn fmt(&self, _f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        panic!("sys::arceos::net::TcpListener::fmt");
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut res = f.debug_struct("TcpListener");
+
+        if let Ok(addr) = self.socket_addr() {
+            res.field("addr", &addr);
+        }
+
+        res.finish()
     }
 }
 
-pub struct UdpSocket {
-    inner: Socket,
-}
+////////////////////////////////////////////////////////////////////////////////
+// UDP
+////////////////////////////////////////////////////////////////////////////////
+
+pub struct UdpSocket(!);
 
 impl UdpSocket {
-    pub fn bind(addr: io::Result<&SocketAddr>) -> io::Result<UdpSocket> {
-        let addr = addr?;
-
-        init();
-
-        let sock = Socket::new(addr, abi::SOCK_DGRAM)?;
-
-        unsafe { abi::sys_bind(sock.as_raw(), addr) };
-
-        Ok(UdpSocket { inner: sock })
+    pub fn bind(_: io::Result<&SocketAddr>) -> io::Result<UdpSocket> {
+        unsupported()
     }
 
     pub fn peer_addr(&self) -> io::Result<SocketAddr> {
-        panic!("UdpSocket::peer_addr");
+        self.0
     }
 
     pub fn socket_addr(&self) -> io::Result<SocketAddr> {
-        abi_ret!(
-            abi::sys_getsockname(self.inner.as_raw())
-        )
+        self.0
     }
 
-    pub fn recv_from(&self, buf: &mut [u8]) -> io::Result<(usize, SocketAddr)> {
-        self.inner.recv_from(buf)
+    pub fn recv_from(&self, _: &mut [u8]) -> io::Result<(usize, SocketAddr)> {
+        self.0
     }
 
     pub fn peek_from(&self, _: &mut [u8]) -> io::Result<(usize, SocketAddr)> {
-        panic!("UdpSocket::...");
+        self.0
     }
 
-    pub fn send_to(&self, buf: &[u8], dst: &SocketAddr) -> io::Result<usize> {
-        unsafe {
-            Ok(abi::sys_sendto(self.inner.as_raw(), buf, dst))
-        }
+    pub fn send_to(&self, _: &[u8], _: &SocketAddr) -> io::Result<usize> {
+        self.0
     }
 
     pub fn duplicate(&self) -> io::Result<UdpSocket> {
-        panic!("UdpSocket");
+        self.0
     }
 
     pub fn set_read_timeout(&self, _: Option<Duration>) -> io::Result<()> {
-        panic!("UdpSocket");
+        self.0
     }
 
     pub fn set_write_timeout(&self, _: Option<Duration>) -> io::Result<()> {
-        panic!("UdpSocket");
+        self.0
     }
 
     pub fn read_timeout(&self) -> io::Result<Option<Duration>> {
-        panic!("UdpSocket");
+        self.0
     }
 
     pub fn write_timeout(&self) -> io::Result<Option<Duration>> {
-        panic!("UdpSocket");
+        self.0
     }
 
     pub fn set_broadcast(&self, _: bool) -> io::Result<()> {
-        panic!("UdpSocket");
+        self.0
     }
 
     pub fn broadcast(&self) -> io::Result<bool> {
-        panic!("UdpSocket");
+        self.0
     }
 
     pub fn set_multicast_loop_v4(&self, _: bool) -> io::Result<()> {
-        panic!("UdpSocket");
+        self.0
     }
 
     pub fn multicast_loop_v4(&self) -> io::Result<bool> {
-        panic!("UdpSocket");
+        self.0
     }
 
     pub fn set_multicast_ttl_v4(&self, _: u32) -> io::Result<()> {
-        panic!("UdpSocket");
+        self.0
     }
 
     pub fn multicast_ttl_v4(&self) -> io::Result<u32> {
-        panic!("UdpSocket");
+        self.0
     }
 
     pub fn set_multicast_loop_v6(&self, _: bool) -> io::Result<()> {
-        panic!("UdpSocket");
+        self.0
     }
 
     pub fn multicast_loop_v6(&self) -> io::Result<bool> {
-        panic!("UdpSocket");
+        self.0
     }
 
     pub fn join_multicast_v4(&self, _: &Ipv4Addr, _: &Ipv4Addr) -> io::Result<()> {
-        panic!("UdpSocket");
+        self.0
     }
 
     pub fn join_multicast_v6(&self, _: &Ipv6Addr, _: u32) -> io::Result<()> {
-        panic!("UdpSocket");
+        self.0
     }
 
     pub fn leave_multicast_v4(&self, _: &Ipv4Addr, _: &Ipv4Addr) -> io::Result<()> {
-        panic!("UdpSocket");
+        self.0
     }
 
     pub fn leave_multicast_v6(&self, _: &Ipv6Addr, _: u32) -> io::Result<()> {
-        panic!("UdpSocket");
+        self.0
     }
 
     pub fn set_ttl(&self, _: u32) -> io::Result<()> {
-        panic!("UdpSocket");
+        self.0
     }
 
     pub fn ttl(&self) -> io::Result<u32> {
-        panic!("UdpSocket");
+        self.0
     }
 
     pub fn take_error(&self) -> io::Result<Option<io::Error>> {
-        panic!("UdpSocket");
+        self.0
     }
 
     pub fn set_nonblocking(&self, _: bool) -> io::Result<()> {
-        panic!("UdpSocket");
+        self.0
     }
 
     pub fn recv(&self, _: &mut [u8]) -> io::Result<usize> {
-        panic!("UdpSocket");
+        self.0
     }
 
     pub fn peek(&self, _: &mut [u8]) -> io::Result<usize> {
-        panic!("UdpSocket");
+        self.0
     }
 
     pub fn send(&self, _: &[u8]) -> io::Result<usize> {
-        panic!("UdpSocket");
+        self.0
     }
 
     pub fn connect(&self, _: io::Result<&SocketAddr>) -> io::Result<()> {
-        panic!("UdpSocket");
+        self.0
     }
 }
 
 impl fmt::Debug for UdpSocket {
     fn fmt(&self, _f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        panic!("UdpSocket::fmt");
+        self.0
     }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+// get_host_addresses
+////////////////////////////////////////////////////////////////////////////////
 
 pub struct LookupHost {
     iter: IntoIter<SocketAddr>,
@@ -390,12 +391,9 @@ impl TryFrom<&str> for LookupHost {
 impl<'a> TryFrom<(&'a str, u16)> for LookupHost {
     type Error = io::Error;
 
-    fn try_from(v: (&'a str, u16)) -> io::Result<LookupHost> {
-        let (name, port) = v;
-        let iter = abi_ret!(
-            abi::sys_getaddrinfo(name, port)
-        )?.into_iter();
-        Ok(LookupHost { iter, port })
+    fn try_from((host, port): (&'a str, u16)) -> io::Result<LookupHost> {
+        let addrs = cvt(api::ax_get_addr_info(host, Some(port)))?;
+        Ok(LookupHost { iter: addrs.into_iter(), port })
     }
 }
 
@@ -433,64 +431,4 @@ pub mod netc {
 
     #[derive(Copy, Clone)]
     pub struct sockaddr {}
-}
-
-/// Checks whether the socket interface has been started already, and
-/// if not, starts it.
-pub fn init() {
-}
-
-#[derive(Debug)]
-pub struct Socket(usize);
-
-impl Socket {
-    pub fn new(addr: &SocketAddr, ty: i32) -> io::Result<Socket> {
-        println!("Socket::new ...");
-        let fam = match *addr {
-            SocketAddr::V4(..) => netc::AF_INET,
-            SocketAddr::V6(..) => netc::AF_INET6,
-        };
-        Socket::new_raw(fam as i32, ty)
-    }
-
-    pub fn new_raw(fam: i32, ty: i32) -> io::Result<Socket> {
-        let handle = unsafe { abi::sys_socket(fam, ty) };
-        Ok(Socket(handle))
-    }
-
-    pub fn as_raw(&self) -> usize {
-        self.0
-    }
-
-    pub fn new_from_handle(handle: usize) -> Socket {
-        Socket(handle)
-    }
-
-    pub fn read(&self, buf: &mut [u8]) -> io::Result<usize> {
-        self.recv_with_flags(buf, 0)
-    }
-
-    fn recv_with_flags(&self, buf: &mut [u8], flags: i32) -> io::Result<usize> {
-        unsafe {
-            Ok(abi::sys_recv(self.as_raw(), buf, flags))
-        }
-    }
-
-    pub fn recv_from(&self, buf: &mut [u8]) -> io::Result<(usize, SocketAddr)> {
-        self.recv_from_with_flags(buf, 0)
-    }
-
-    fn recv_from_with_flags(&self, buf: &mut [u8], flags: i32)
-        -> io::Result<(usize, SocketAddr)>
-    {
-        unsafe {
-            Ok(abi::sys_recvfrom(self.as_raw(), buf, flags))
-        }
-    }
-}
-
-impl Drop for Socket {
-    fn drop(&mut self) {
-        unsafe { abi::sys_close_socket(self.0) }
-    }
 }
