@@ -1,36 +1,37 @@
-use crate::collections::HashMap;
-use crate::sync::Mutex;
-use crate::ffi::{CStr, OsStr, OsString};
 use crate::os::arceos::ffi::OsStringExt;
-use crate::sys::memchr;
+
+use crate::collections::HashMap;
 use crate::error::Error as StdError;
+use crate::ffi::{CStr, OsStr, OsString};
 use crate::fmt;
 use crate::io;
 use crate::marker::PhantomData;
 use crate::path::{self, PathBuf};
-use crate::str;
-use crate::sys::arceos::abi;
-use crate::sys::unsupported;
+use crate::sync::Mutex;
+use crate::sys::{cvt, memchr, unsupported};
 use crate::vec;
 
 pub fn errno() -> i32 {
     0
 }
 
-pub fn error_string(_errno: i32) -> String {
-    "operation successful".to_string()
+pub fn error_string(errno: i32) -> String {
+    if let Ok(e) = arceos_api::AxError::try_from(errno) {
+        e.as_str().to_string()
+    } else {
+        format!("Unknown error: {}", errno)
+    }
 }
 
 pub fn getcwd() -> io::Result<PathBuf> {
-    abi_ret!(
-        abi::sys_getcwd().map(|s| { s.into() })
-    )
+    cvt(arceos_api::fs::ax_current_dir()).map(Into::into)
 }
 
 pub fn chdir(path: &path::Path) -> io::Result<()> {
-    abi_ret!(
-        abi::sys_chdir(path.to_str().unwrap())
-    )
+    let path_str = path.to_str().ok_or_else(|| {
+        io::Error::new(io::ErrorKind::InvalidInput, "path contains invalid UTF-8 characters")
+    })?;
+    cvt(arceos_api::fs::ax_set_current_dir(path_str))
 }
 
 pub struct SplitPaths<'a>(!, PhantomData<&'a ()>);
@@ -172,7 +173,7 @@ pub fn home_dir() -> Option<PathBuf> {
 }
 
 pub fn exit(_code: i32) -> ! {
-    panic!("os::exit!");
+    arceos_api::sys::ax_terminate();
 }
 
 pub fn getpid() -> u32 {

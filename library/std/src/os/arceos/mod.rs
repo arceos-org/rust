@@ -7,8 +7,8 @@ pub mod abi;
 pub use abi::*;
 
 pub mod ffi;
-#[stable(feature = "rust1", since = "1.0.0")]
 pub mod fs;
+pub mod net;
 
 #[stable(feature = "rust1", since = "1.0.0")]
 pub use arceos_api as api;

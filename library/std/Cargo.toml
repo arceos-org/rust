@@ -49,7 +49,7 @@ hermit-abi = { version = "0.3.0", features = ['rustc-dep-of-std'] }
 
 [target.'cfg(target_os = "arceos")'.dependencies]
 axerrno = { path = "../../../../crates/axerrno" }
-arceos_api = { path = "../../../../api/arceos_api", features = ["alloc", "dummy-if-not-enabled"] }
+arceos_api = { path = "../../../../api/arceos_api", features = ["alloc", "dummy-if-not-enabled"], public = true }
 axfeat = { path = "../../../../api/axfeat", features = ["std"] }
 
 [target.wasm32-wasi.dependencies]

@@ -132,8 +132,12 @@ pub unsafe extern "C" fn runtime_entry(
     run_dtors();
 }
 
-pub fn decode_error_kind(_errno: i32) -> ErrorKind {
-    ErrorKind::Other
+pub fn decode_error_kind(errno: i32) -> ErrorKind {
+    if let Ok(err) = AxError::try_from(errno) {
+        axerrno_to_error_kind(err)
+    } else {
+        ErrorKind::Uncategorized
+    }
 }
 
 fn axerrno_to_error_kind(errno: AxError) -> ErrorKind {
@@ -159,16 +163,13 @@ fn axerrno_to_error_kind(errno: AxError) -> ErrorKind {
         WriteZero => ErrorKind::WriteZero,
         WouldBlock => ErrorKind::WouldBlock,
         BadAddress | BadState | Io => ErrorKind::Other,
-        _ => ErrorKind::Other,
+        _ => ErrorKind::Uncategorized,
     }
 }
 
 pub fn cvt<T>(t: AxResult<T>) -> crate::io::Result<T> {
     match t {
         Ok(t) => Ok(t),
-        Err(e) => {
-            let e = axerrno_to_error_kind(e);
-            Err(crate::io::Error::from(e))
-        }
+        Err(e) => Err(crate::io::Error::from_raw_os_error(e.code())),
     }
 }

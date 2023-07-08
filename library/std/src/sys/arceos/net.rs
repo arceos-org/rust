@@ -1,9 +1,10 @@
 use crate::fmt;
 use crate::io::{self, BorrowedCursor, IoSlice, IoSliceMut};
 use crate::net::{Ipv4Addr, Ipv6Addr, Shutdown, SocketAddr};
+use crate::os::arceos::net::{AsRawTcpSocket, FromRawTcpSocket, IntoRawTcpSocket};
 use crate::sys::{cvt, unsupported};
 use crate::time::Duration;
-use alloc::vec::IntoIter;
+use crate::vec::IntoIter;
 
 use arceos_api::net::{self as api, AxTcpSocketHandle};
 
@@ -124,6 +125,27 @@ impl TcpStream {
     }
 }
 
+impl AsRawTcpSocket for TcpStream {
+    #[inline]
+    fn as_raw_socket(&self) -> &AxTcpSocketHandle {
+        &self.inner
+    }
+}
+
+impl FromRawTcpSocket for TcpStream {
+    #[inline]
+    unsafe fn from_raw_socket(sock: AxTcpSocketHandle) -> TcpStream {
+        TcpStream { inner: sock }
+    }
+}
+
+impl IntoRawTcpSocket for TcpStream {
+    #[inline]
+    fn into_raw_socket(self) -> AxTcpSocketHandle {
+        self.inner
+    }
+}
+
 impl fmt::Debug for TcpStream {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut res = f.debug_struct("TcpStream");
@@ -193,6 +215,27 @@ impl TcpListener {
 
     pub fn set_nonblocking(&self, _: bool) -> io::Result<()> {
         unsupported()
+    }
+}
+
+impl AsRawTcpSocket for TcpListener {
+    #[inline]
+    fn as_raw_socket(&self) -> &AxTcpSocketHandle {
+        &self.inner
+    }
+}
+
+impl FromRawTcpSocket for TcpListener {
+    #[inline]
+    unsafe fn from_raw_socket(sock: AxTcpSocketHandle) -> TcpListener {
+        TcpListener { inner: sock }
+    }
+}
+
+impl IntoRawTcpSocket for TcpListener {
+    #[inline]
+    fn into_raw_socket(self) -> AxTcpSocketHandle {
+        self.inner
     }
 }
 

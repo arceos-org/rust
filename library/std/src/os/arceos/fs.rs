@@ -2,10 +2,12 @@
 //!
 //! [`std::fs`]: crate::fs
 
+#![stable(feature = "rust1", since = "1.0.0")]
+
 use crate::fs;
 use crate::fs::Permissions;
-use crate::sys_common::AsInner;
 use crate::hash::Hash;
+use crate::sys_common::AsInner;
 
 /// Node (file/directory) type.
 #[repr(u8)]
