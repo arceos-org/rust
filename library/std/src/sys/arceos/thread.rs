@@ -4,13 +4,14 @@ use super::unsupported;
 use crate::ffi::CStr;
 use crate::io;
 use crate::num::NonZeroUsize;
-use crate::time::Duration;
+use crate::os::arceos::api;
 use crate::sys::arceos::abi;
 use crate::sys::arceos::thread_local_dtor::run_dtors;
+use crate::time::Duration;
 
-pub const LOW_PRIO:     i32 = 1;
-pub const NORMAL_PRIO:  i32 = 2;
-pub const HIGH_PRIO:    i32 = 3;
+pub const LOW_PRIO: i32 = 1;
+pub const NORMAL_PRIO: i32 = 2;
+pub const HIGH_PRIO: i32 = 3;
 
 pub struct Thread {
     handle: usize,
@@ -31,7 +32,7 @@ impl Thread {
         p: Box<dyn FnOnce()>,
         core_id: isize,
     ) -> io::Result<Thread> {
-        let thread_start = move|| {
+        let thread_start = move || {
             unsafe {
                 p();
 
@@ -40,18 +41,13 @@ impl Thread {
             }
         };
 
-        let handle = abi::sys_spawn2(
-            Box::new(thread_start),
-            NORMAL_PRIO,
-            stack,
-            core_id,
-        );
+        let handle = abi::sys_spawn2(Box::new(thread_start), NORMAL_PRIO, stack, core_id);
 
         Ok(Thread { handle: handle })
     }
 
     pub fn yield_now() {
-        unsafe { abi::sys_yield_now(); }
+        api::task::ax_yield_now();
     }
 
     pub fn set_name(_name: &CStr) {
@@ -59,7 +55,7 @@ impl Thread {
     }
 
     pub fn sleep(dur: Duration) {
-        unsafe { abi::sys_sleep(dur); }
+        api::task::ax_sleep_until(api::time::ax_current_time() + dur);
     }
 
     pub fn join(self) {
