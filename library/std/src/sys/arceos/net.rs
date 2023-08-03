@@ -2,11 +2,12 @@ use crate::fmt;
 use crate::io::{self, BorrowedCursor, IoSlice, IoSliceMut};
 use crate::net::{IpAddr, Ipv4Addr, Ipv6Addr, Shutdown, SocketAddr};
 use crate::os::arceos::net::{AsRawTcpSocket, FromRawTcpSocket, IntoRawTcpSocket};
+use crate::os::arceos::net::{AsRawUdpSocket, FromRawUdpSocket, IntoRawUdpSocket};
 use crate::sys::{cvt, unsupported};
 use crate::time::Duration;
 use crate::vec::IntoIter;
 
-use arceos_api::net::{self as api, AxTcpSocketHandle};
+use arceos_api::net::{self as api, AxTcpSocketHandle, AxUdpSocketHandle};
 
 ////////////////////////////////////////////////////////////////////////////////
 // TCP streams
@@ -120,8 +121,8 @@ impl TcpStream {
         unsupported()
     }
 
-    pub fn set_nonblocking(&self, _: bool) -> io::Result<()> {
-        unsupported()
+    pub fn set_nonblocking(&self, nonblocking: bool) -> io::Result<()> {
+        cvt(api::ax_tcp_set_nonblocking(&self.inner, nonblocking))
     }
 }
 
@@ -213,8 +214,8 @@ impl TcpListener {
         unsupported()
     }
 
-    pub fn set_nonblocking(&self, _: bool) -> io::Result<()> {
-        unsupported()
+    pub fn set_nonblocking(&self, nonblocking: bool) -> io::Result<()> {
+        cvt(api::ax_tcp_set_nonblocking(&self.inner, nonblocking))
     }
 }
 
@@ -255,137 +256,170 @@ impl fmt::Debug for TcpListener {
 // UDP
 ////////////////////////////////////////////////////////////////////////////////
 
-pub struct UdpSocket(!);
+pub struct UdpSocket {
+    inner: AxUdpSocketHandle,
+}
 
 impl UdpSocket {
-    pub fn bind(_: io::Result<&SocketAddr>) -> io::Result<UdpSocket> {
-        unsupported()
+    pub fn bind(addr: io::Result<&SocketAddr>) -> io::Result<UdpSocket> {
+        let addr = addr?;
+        let sock = api::ax_udp_socket();
+        cvt(api::ax_udp_bind(&sock, *addr))?;
+        Ok(UdpSocket { inner: sock })
     }
 
     pub fn peer_addr(&self) -> io::Result<SocketAddr> {
-        self.0
+        cvt(api::ax_udp_peer_addr(&self.inner))
     }
 
     pub fn socket_addr(&self) -> io::Result<SocketAddr> {
-        self.0
+        cvt(api::ax_udp_socket_addr(&self.inner))
     }
 
-    pub fn recv_from(&self, _: &mut [u8]) -> io::Result<(usize, SocketAddr)> {
-        self.0
+    pub fn recv_from(&self, buf: &mut [u8]) -> io::Result<(usize, SocketAddr)> {
+        cvt(api::ax_udp_recv_from(&self.inner, buf))
     }
 
-    pub fn peek_from(&self, _: &mut [u8]) -> io::Result<(usize, SocketAddr)> {
-        self.0
+    pub fn peek_from(&self, buf: &mut [u8]) -> io::Result<(usize, SocketAddr)> {
+        cvt(api::ax_udp_peek_from(&self.inner, buf))
     }
 
-    pub fn send_to(&self, _: &[u8], _: &SocketAddr) -> io::Result<usize> {
-        self.0
+    pub fn send_to(&self, buf: &[u8], dst: &SocketAddr) -> io::Result<usize> {
+        cvt(api::ax_udp_send_to(&self.inner, buf, *dst))
     }
 
     pub fn duplicate(&self) -> io::Result<UdpSocket> {
-        self.0
+        unsupported()
     }
 
     pub fn set_read_timeout(&self, _: Option<Duration>) -> io::Result<()> {
-        self.0
+        unsupported()
     }
 
     pub fn set_write_timeout(&self, _: Option<Duration>) -> io::Result<()> {
-        self.0
+        unsupported()
     }
 
     pub fn read_timeout(&self) -> io::Result<Option<Duration>> {
-        self.0
+        unsupported()
     }
 
     pub fn write_timeout(&self) -> io::Result<Option<Duration>> {
-        self.0
+        unsupported()
     }
 
     pub fn set_broadcast(&self, _: bool) -> io::Result<()> {
-        self.0
+        unsupported()
     }
 
     pub fn broadcast(&self) -> io::Result<bool> {
-        self.0
+        unsupported()
     }
 
     pub fn set_multicast_loop_v4(&self, _: bool) -> io::Result<()> {
-        self.0
+        unsupported()
     }
 
     pub fn multicast_loop_v4(&self) -> io::Result<bool> {
-        self.0
+        unsupported()
     }
 
     pub fn set_multicast_ttl_v4(&self, _: u32) -> io::Result<()> {
-        self.0
+        unsupported()
     }
 
     pub fn multicast_ttl_v4(&self) -> io::Result<u32> {
-        self.0
+        unsupported()
     }
 
     pub fn set_multicast_loop_v6(&self, _: bool) -> io::Result<()> {
-        self.0
+        unsupported()
     }
 
     pub fn multicast_loop_v6(&self) -> io::Result<bool> {
-        self.0
+        unsupported()
     }
 
     pub fn join_multicast_v4(&self, _: &Ipv4Addr, _: &Ipv4Addr) -> io::Result<()> {
-        self.0
+        unsupported()
     }
 
     pub fn join_multicast_v6(&self, _: &Ipv6Addr, _: u32) -> io::Result<()> {
-        self.0
+        unsupported()
     }
 
     pub fn leave_multicast_v4(&self, _: &Ipv4Addr, _: &Ipv4Addr) -> io::Result<()> {
-        self.0
+        unsupported()
     }
 
     pub fn leave_multicast_v6(&self, _: &Ipv6Addr, _: u32) -> io::Result<()> {
-        self.0
+        unsupported()
     }
 
     pub fn set_ttl(&self, _: u32) -> io::Result<()> {
-        self.0
+        unsupported()
     }
 
     pub fn ttl(&self) -> io::Result<u32> {
-        self.0
+        unsupported()
     }
 
     pub fn take_error(&self) -> io::Result<Option<io::Error>> {
-        self.0
+        unsupported()
     }
 
-    pub fn set_nonblocking(&self, _: bool) -> io::Result<()> {
-        self.0
+    pub fn set_nonblocking(&self, nonblocking: bool) -> io::Result<()> {
+        cvt(api::ax_udp_set_nonblocking(&self.inner, nonblocking))
     }
 
-    pub fn recv(&self, _: &mut [u8]) -> io::Result<usize> {
-        self.0
+    pub fn recv(&self, buf: &mut [u8]) -> io::Result<usize> {
+        cvt(api::ax_udp_recv(&self.inner, buf))
     }
 
     pub fn peek(&self, _: &mut [u8]) -> io::Result<usize> {
-        self.0
+        unsupported()
     }
 
-    pub fn send(&self, _: &[u8]) -> io::Result<usize> {
-        self.0
+    pub fn send(&self, buf: &[u8]) -> io::Result<usize> {
+        cvt(api::ax_udp_send(&self.inner, buf))
     }
 
-    pub fn connect(&self, _: io::Result<&SocketAddr>) -> io::Result<()> {
-        self.0
+    pub fn connect(&self, addr: io::Result<&SocketAddr>) -> io::Result<()> {
+        let addr = addr?;
+        cvt(api::ax_udp_connect(&self.inner, *addr))
+    }
+}
+
+impl AsRawUdpSocket for UdpSocket {
+    #[inline]
+    fn as_raw_socket(&self) -> &AxUdpSocketHandle {
+        &self.inner
+    }
+}
+
+impl FromRawUdpSocket for UdpSocket {
+    #[inline]
+    unsafe fn from_raw_socket(sock: AxUdpSocketHandle) -> UdpSocket {
+        UdpSocket { inner: sock }
+    }
+}
+
+impl IntoRawUdpSocket for UdpSocket {
+    #[inline]
+    fn into_raw_socket(self) -> AxUdpSocketHandle {
+        self.inner
     }
 }
 
 impl fmt::Debug for UdpSocket {
-    fn fmt(&self, _f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.0
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut res = f.debug_struct("UdpSocket");
+
+        if let Ok(addr) = self.socket_addr() {
+            res.field("addr", &addr);
+        }
+
+        res.finish()
     }
 }
 
