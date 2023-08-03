@@ -8,6 +8,12 @@ use crate::{net, sys};
 pub use arceos_api::net::AxTcpSocketHandle;
 
 #[stable(feature = "rust1", since = "1.0.0")]
+pub use arceos_api::net::AxUdpSocketHandle;
+
+#[stable(feature = "rust1", since = "1.0.0")]
+pub use arceos_api::net::AxSocketHandle;
+
+#[stable(feature = "rust1", since = "1.0.0")]
 pub trait AsRawTcpSocket {
     #[stable(feature = "rust1", since = "1.0.0")]
     fn as_raw_socket(&self) -> &AxTcpSocketHandle;
@@ -70,5 +76,33 @@ impl IntoRawTcpSocket for net::TcpListener {
     #[inline]
     fn into_raw_socket(self) -> AxTcpSocketHandle {
         self.into_inner().into_raw_socket()
+    }
+}
+
+#[stable(feature = "into_raw_os", since = "1.4.0")]
+pub trait IntoRawUdpSocket {
+    #[stable(feature = "into_raw_os", since = "1.4.0")]
+    fn into_raw_socket(self) -> AxUdpSocketHandle;
+}
+
+#[stable(feature = "into_raw_os", since = "1.4.0")]
+impl IntoRawUdpSocket for net::UdpSocket {
+    #[inline]
+    fn into_raw_socket(self) -> AxUdpSocketHandle {
+        self.into_inner().into_raw_socket()
+    }
+}
+
+#[stable(feature = "from_raw_os", since = "1.1.0")]
+pub trait FromRawUdpSocket {
+    #[stable(feature = "from_raw_os", since = "1.1.0")]
+    unsafe fn from_raw_socket(sock: AxUdpSocketHandle) -> Self;
+}
+
+#[stable(feature = "from_raw_os", since = "1.1.0")]
+impl FromRawUdpSocket for net::UdpSocket {
+    #[inline]
+    unsafe fn from_raw_socket(sock: AxUdpSocketHandle) -> net::UdpSocket {
+        net::UdpSocket::from_inner(sys::net::UdpSocket::from_raw_socket(sock))
     }
 }
