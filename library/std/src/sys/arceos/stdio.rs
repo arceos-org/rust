@@ -1,6 +1,7 @@
 use crate::io;
-use crate::io::{IoSlice, IoSliceMut};
-use crate::sys::arceos::abi;
+use crate::sys::cvt;
+
+use arceos_api::stdio as api;
 
 pub struct Stdin;
 pub struct Stdout;
@@ -13,20 +14,23 @@ impl Stdin {
 }
 
 impl io::Read for Stdin {
+    // Non-blocking read, returns number of bytes read.
     fn read(&mut self, data: &mut [u8]) -> io::Result<usize> {
-        unsafe { Ok(abi::sys_console_read_bytes(data)) }
-    }
-
-    fn read_vectored(&mut self, data: &mut [IoSliceMut<'_>]) -> io::Result<usize> {
-        unsafe {
-            let (_, data, _) = data.align_to_mut::<u8>();
-            Ok(abi::sys_console_read_bytes(data))
+        let mut read_len = 0;
+        while read_len < data.len() {
+            if let Some(c) = api::ax_console_read_byte() {
+                data[read_len] = c;
+                read_len += 1;
+            } else {
+                break;
+            }
         }
+        Ok(read_len)
     }
 
     #[inline]
     fn is_read_vectored(&self) -> bool {
-        true
+        false
     }
 }
 
@@ -38,23 +42,12 @@ impl Stdout {
 
 impl io::Write for Stdout {
     fn write(&mut self, data: &[u8]) -> io::Result<usize> {
-        unsafe {
-            abi::sys_console_write_bytes(data);
-        }
-        Ok(data.len() as usize)
-    }
-
-    fn write_vectored(&mut self, data: &[IoSlice<'_>]) -> io::Result<usize> {
-        unsafe {
-            let (_, data, _) = data.align_to::<u8>();
-            abi::sys_console_write_bytes(data);
-            Ok(data.len() as usize)
-        }
+        cvt(api::ax_console_write_bytes(data))
     }
 
     #[inline]
     fn is_write_vectored(&self) -> bool {
-        true
+        false
     }
 
     fn flush(&mut self) -> io::Result<()> {
@@ -71,24 +64,12 @@ impl Stderr {
 impl io::Write for Stderr {
     fn write(&mut self, data: &[u8]) -> io::Result<usize> {
         // Todo: implement specific stderr in arceos.
-        unsafe {
-            abi::sys_console_write_bytes(data);
-        }
-        Ok(data.len() as usize)
-    }
-
-    fn write_vectored(&mut self, data: &[IoSlice<'_>]) -> io::Result<usize> {
-        // Todo: implement specific stderr in arceos.
-        unsafe {
-            let (_, data, _) = data.align_to::<u8>();
-            abi::sys_console_write_bytes(data);
-            Ok(data.len() as usize)
-        }
+        cvt(api::ax_console_write_bytes(data))
     }
 
     #[inline]
     fn is_write_vectored(&self) -> bool {
-        true
+        false
     }
 
     fn flush(&mut self) -> io::Result<()> {

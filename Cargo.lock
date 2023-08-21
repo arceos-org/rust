@@ -79,8 +79,7 @@ name = "allocator"
 version = "0.1.0"
 dependencies = [
  "bitmap-allocator",
- "buddy_system_allocator",
- "slab_allocator",
+ "rlsf",
 ]
 
 [[package]]
@@ -292,6 +291,7 @@ version = "0.1.0"
 dependencies = [
  "allocator",
  "axerrno",
+ "cfg-if",
  "log",
  "memory_addr",
  "spinlock",
@@ -401,13 +401,16 @@ dependencies = [
  "bitflags 2.3.3",
  "cfg-if",
  "crate_interface",
+ "dw_apb_uart",
  "handler_table",
  "kernel_guard",
  "lazy_init",
  "log",
  "memory_addr",
  "page_table",
+ "page_table_entry",
  "percpu",
+ "ratio",
  "raw-cpuid 11.0.1",
  "riscv",
  "sbi-rt",
@@ -451,6 +454,7 @@ dependencies = [
  "lazy_init",
  "log",
  "smoltcp",
+ "spin",
 ]
 
 [[package]]
@@ -511,6 +515,12 @@ dependencies = [
  "object 0.30.1",
  "rustc-demangle",
 ]
+
+[[package]]
+name = "base64"
+version = "0.13.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9e1b586273c5702936fe7b7d6896644d8be71e6314cfe09d3167c95f712589e8"
 
 [[package]]
 name = "basic-toml"
@@ -582,12 +592,6 @@ dependencies = [
  "regex-automata 0.1.10",
  "serde",
 ]
-
-[[package]]
-name = "buddy_system_allocator"
-version = "0.9.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "43f9365b6b0c9e1663ca4ca9440c00eda46bc85a3407070be8b5e0d8d1f29629"
 
 [[package]]
 name = "build-manifest"
@@ -1092,6 +1096,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "const-default"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0b396d1f76d455557e1218ec8066ae14bba60b4b36ecd55577ba979f5db7ecaa"
+
+[[package]]
 name = "convert_case"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1411,6 +1421,7 @@ name = "driver_block"
 version = "0.1.0"
 dependencies = [
  "driver_common",
+ "log",
 ]
 
 [[package]]
@@ -1422,6 +1433,7 @@ name = "driver_net"
 version = "0.1.0"
 dependencies = [
  "driver_common",
+ "log",
  "spin",
 ]
 
@@ -1433,6 +1445,13 @@ dependencies = [
  "driver_common",
  "driver_net",
  "virtio-drivers",
+]
+
+[[package]]
+name = "dw_apb_uart"
+version = "0.1.0"
+dependencies = [
+ "tock-registers",
 ]
 
 [[package]]
@@ -1836,8 +1855,6 @@ version = "0.2.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "14dbbfd5c71d70241ecf9e6f13737f7b5ce823821063188d7e46c41d371eebd5"
 dependencies = [
- "rustc-std-workspace-core",
- "rustc-std-workspace-std",
  "unicode-width",
 ]
 
@@ -2889,6 +2906,7 @@ dependencies = [
 name = "page_table_entry"
 version = "0.1.0"
 dependencies = [
+ "aarch64-cpu",
  "bitflags 2.3.3",
  "memory_addr",
  "x86_64",
@@ -3296,6 +3314,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "ratio"
+version = "0.1.0"
+
+[[package]]
 name = "raw-cpuid"
 version = "10.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3442,6 +3464,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "rlsf"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "222fb240c3286247ecdee6fa5341e7cdad0ffdf8e7e401d9937f2d58482a20bf"
+dependencies = [
+ "cfg-if",
+ "const-default",
+ "libc",
+ "svgbobdoc",
+]
+
+[[package]]
 name = "rust-demangler"
 version = "0.0.1"
 dependencies = [
@@ -3536,13 +3570,6 @@ name = "rustc-std-workspace-core"
 version = "1.99.0"
 dependencies = [
  "core",
-]
-
-[[package]]
-name = "rustc-std-workspace-std"
-version = "1.99.0"
-dependencies = [
- "std",
 ]
 
 [[package]]
@@ -5130,13 +5157,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c111b5bd5695e56cffe5129854aa230b39c93a305372fdbb2668ca2394eea9f8"
 
 [[package]]
-name = "slab_allocator"
-version = "0.3.1"
-dependencies = [
- "buddy_system_allocator",
-]
-
-[[package]]
 name = "smallvec"
 version = "1.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5145,8 +5165,7 @@ checksum = "a507befe795404456341dfab10cef66ead4c041f62b8b11bbb92bffe5d0953e0"
 [[package]]
 name = "smoltcp"
 version = "0.10.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8d2e3a36ac8fea7b94e666dfa3871063d6e0a5c9d5d4fec9a1a6b7b6760f0229"
+source = "git+https://github.com/rcore-os/smoltcp.git?rev=2ade274#2ade2747abc4d779d0836154b0413d13ce16cd5b"
 dependencies = [
  "bitflags 1.3.2",
  "byteorder",
@@ -5346,6 +5365,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "svgbobdoc"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f2c04b93fc15d79b39c63218f15e3fdffaa4c227830686e3b7c5f41244eb3e50"
+dependencies = [
+ "base64",
+ "proc-macro2",
+ "quote",
+ "syn 1.0.102",
+ "unicode-width",
+]
+
+[[package]]
 name = "syn"
 version = "1.0.102"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5397,7 +5429,6 @@ version = "0.0.0"
 dependencies = [
  "proc_macro",
  "std",
- "test",
 ]
 
 [[package]]
@@ -5473,17 +5504,6 @@ checksum = "1706be6b564323ce7092f5f7e6b118a14c8ef7ed0e69c8c5329c914a9f101295"
 dependencies = [
  "libc",
  "winapi",
-]
-
-[[package]]
-name = "test"
-version = "0.0.0"
-dependencies = [
- "core",
- "getopts",
- "panic_abort",
- "panic_unwind",
- "std",
 ]
 
 [[package]]
@@ -5977,11 +5997,6 @@ name = "unicode-width"
 version = "0.1.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c0edd1e5b14653f783770bce4a4dabb4a5108a5370a5f5d8cfe8710c361f6c8b"
-dependencies = [
- "compiler_builtins",
- "rustc-std-workspace-core",
- "rustc-std-workspace-std",
-]
 
 [[package]]
 name = "unicode-xid"

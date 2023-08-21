@@ -99,6 +99,8 @@ pub mod windows;
 // Others.
 #[cfg(target_os = "android")]
 pub mod android;
+#[cfg(target_os = "arceos")]
+pub mod arceos;
 #[cfg(target_os = "dragonfly")]
 pub mod dragonfly;
 #[cfg(target_os = "emscripten")]
@@ -115,8 +117,6 @@ pub mod fuchsia;
 pub mod haiku;
 #[cfg(target_os = "hermit")]
 pub mod hermit;
-#[cfg(target_os = "arceos")]
-pub mod arceos;
 #[cfg(target_os = "horizon")]
 pub mod horizon;
 #[cfg(target_os = "illumos")]

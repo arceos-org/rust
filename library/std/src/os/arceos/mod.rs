@@ -1,10 +1,6 @@
 #![stable(feature = "rust1", since = "1.0.0")]
 
-#[stable(feature = "rust1", since = "1.0.0")]
-pub mod abi;
-
-#[stable(feature = "rust1", since = "1.0.0")]
-pub use abi::*;
+pub(crate) mod abi;
 
 pub mod ffi;
 pub mod fs;

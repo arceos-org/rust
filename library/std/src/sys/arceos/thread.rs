@@ -1,53 +1,31 @@
-#![allow(dead_code)]
-
-use super::unsupported;
 use crate::ffi::CStr;
 use crate::io;
 use crate::num::NonZeroUsize;
-use crate::os::arceos::api;
-use crate::sys::arceos::abi;
 use crate::sys::arceos::thread_local_dtor::run_dtors;
 use crate::time::Duration;
 
-pub const LOW_PRIO: i32 = 1;
-pub const NORMAL_PRIO: i32 = 2;
-pub const HIGH_PRIO: i32 = 3;
+use arceos_api::task::{self as api, AxTaskHandle};
 
-pub struct Thread {
-    handle: usize,
-}
+pub struct Thread(AxTaskHandle);
 
 unsafe impl Send for Thread {}
 unsafe impl Sync for Thread {}
 
-pub const DEFAULT_MIN_STACK_SIZE: usize = 1 << 20;
+pub const DEFAULT_MIN_STACK_SIZE: usize = arceos_api::config::TASK_STACK_SIZE;
 
 impl Thread {
     pub unsafe fn new(stack: usize, p: Box<dyn FnOnce()>) -> io::Result<Thread> {
-        Thread::new_with_coreid(stack, p, -1 /* = no specific core */)
-    }
-
-    pub unsafe fn new_with_coreid(
-        stack: usize,
-        p: Box<dyn FnOnce()>,
-        core_id: isize,
-    ) -> io::Result<Thread> {
+        let main = Box::into_raw(Box::new(p)).expose_addr();
         let thread_start = move || {
-            unsafe {
-                p();
-
-                // run all destructors
-                run_dtors();
-            }
+            Box::from_raw(crate::ptr::from_exposed_addr::<Box<dyn FnOnce()>>(main).cast_mut())();
+            run_dtors();
         };
-
-        let handle = abi::sys_spawn2(Box::new(thread_start), NORMAL_PRIO, stack, core_id);
-
-        Ok(Thread { handle: handle })
+        let handle = api::ax_spawn(thread_start, "".to_string(), stack);
+        Ok(Thread(handle))
     }
 
     pub fn yield_now() {
-        api::task::ax_yield_now();
+        api::ax_yield_now();
     }
 
     pub fn set_name(_name: &CStr) {
@@ -55,24 +33,16 @@ impl Thread {
     }
 
     pub fn sleep(dur: Duration) {
-        api::task::ax_sleep_until(api::time::ax_current_time() + dur);
+        api::ax_sleep_until(arceos_api::time::ax_current_time() + dur);
     }
 
     pub fn join(self) {
-        unsafe {
-            let _ = abi::sys_join(self.handle);
-        }
-    }
-}
-
-impl Drop for Thread {
-    fn drop(&mut self) {
-        unsafe { abi::sys_close_thread(self.handle) }
+        api::ax_wait_for_exit(self.0);
     }
 }
 
 pub fn available_parallelism() -> io::Result<NonZeroUsize> {
-    unsupported()
+    Ok(NonZeroUsize::new(arceos_api::config::SMP).unwrap())
 }
 
 pub mod guard {

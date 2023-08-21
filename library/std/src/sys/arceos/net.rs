@@ -1,6 +1,6 @@
 use crate::fmt;
 use crate::io::{self, BorrowedCursor, IoSlice, IoSliceMut};
-use crate::net::{Ipv4Addr, Ipv6Addr, Shutdown, SocketAddr};
+use crate::net::{IpAddr, Ipv4Addr, Ipv6Addr, Shutdown, SocketAddr};
 use crate::os::arceos::net::{AsRawTcpSocket, FromRawTcpSocket, IntoRawTcpSocket};
 use crate::sys::{cvt, unsupported};
 use crate::time::Duration;
@@ -394,7 +394,7 @@ impl fmt::Debug for UdpSocket {
 ////////////////////////////////////////////////////////////////////////////////
 
 pub struct LookupHost {
-    iter: IntoIter<SocketAddr>,
+    iter: IntoIter<IpAddr>,
     port: u16,
 }
 
@@ -407,7 +407,7 @@ impl LookupHost {
 impl Iterator for LookupHost {
     type Item = SocketAddr;
     fn next(&mut self) -> Option<SocketAddr> {
-        self.iter.next()
+        self.iter.next().map(|ip| SocketAddr::new(ip, self.port))
     }
 }
 
@@ -435,7 +435,7 @@ impl<'a> TryFrom<(&'a str, u16)> for LookupHost {
     type Error = io::Error;
 
     fn try_from((host, port): (&'a str, u16)) -> io::Result<LookupHost> {
-        let addrs = cvt(api::ax_get_addr_info(host, Some(port)))?;
+        let addrs = cvt(api::ax_dns_query(host))?;
         Ok(LookupHost { iter: addrs.into_iter(), port })
     }
 }

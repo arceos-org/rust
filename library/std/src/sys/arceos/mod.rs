@@ -85,7 +85,7 @@ pub fn unsupported_err() -> crate::io::Error {
 }
 
 pub fn abort_internal() -> ! {
-    unsafe { abi::sys_terminate() }
+    arceos_api::sys::ax_terminate()
 }
 
 // This function is needed by the panic runtime. The symbol is named in
