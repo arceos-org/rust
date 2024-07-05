@@ -101,12 +101,12 @@ impl TcpStream {
         unsupported()
     }
 
-    pub fn set_nodelay(&self, _: bool) -> io::Result<()> {
-        unsupported()
+    pub fn set_nodelay(&self, nodelay: bool) -> io::Result<()> {
+        cvt(api::ax_tcp_set_nodelay(&self.inner, nodelay))
     }
 
     pub fn nodelay(&self) -> io::Result<bool> {
-        unsupported()
+        cvt(api::ax_tcp_nodelay(&self.inner))
     }
 
     pub fn set_ttl(&self, _: u32) -> io::Result<()> {
